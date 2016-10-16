@@ -3,6 +3,7 @@ layout: post
 title: "Getting the leader right"
 date: 2016-10-03
 categories: vim plug-in vimrc
+comments: true
 ---
 
 **_TLDR_**: Swapping `:` and `,` makes key bindings more consistent and intuitive. [Vim-Aliases](https://github.com/konfekt/vim-alias) jump in to replace leader key mappings.

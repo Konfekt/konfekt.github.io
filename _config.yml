@@ -21,6 +21,8 @@ baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://konfekt.github.io" # the base hostname & protocol for your site
 # twitter_username: "" 
 github_username: konfekt
+disqus:
+  shortname: konfekt
 
 # Build settings
 permalink: /blog/:year/:month/:day/:title
