@@ -15,7 +15,7 @@ Restore a Linux installation,
 
 onto another hardware.
 
-We assume that the installed Linux system (in our case OpenSUSE 42.2) uses
+We assume that the installed Linux system (in our case, it happened to be OpenSUSE 42.2) uses
 
 - the bootloader grub2
 
@@ -25,49 +25,66 @@ and has separate partitions for
 - the home `/home` folders
 
 
-As a backup tool, we will use `fsarchiver`.
+As a backup tool, we will use `rsync`.
 Its advantages:
 
+- stable,
 - fast
-- stable, and
-- free of dependencies, that is, a single executable.
+- versatile, and
+- free of dependencies, that is, it is a single executable.
 
 # Saving the installation
 
 ## Saving the partitions
 
-We assume that the backup partition is of type `NTFS`, the file system used by Microsoft Windows (32 bit).
-Otherwise, use `lsblk` to recognize the device letter `L` and number `N`, and mount your partition by `mount /dev/sdLN $MOUNT`.
+[//]: # ( We assume that the backup partition is of type `NTFS`, the file system used by Microsoft Windows (32 bit). )
 
-Configure our backup so that it
+1. Use `lsblk` to identify the backup partition: its device letter, say `b`, and its partition number, say `1`; for example `/dev/sdb1`.
+0. Mount your partition `$PARTITION` to a folder `$FOLDER,` say `/mnt`, by `mount $PARTIION $FOLDER`, say `mount /dev/sdb1 /mnt`.
 
-- mounts inside `/mnt` our backup medium (of NTFS file-system)
-- labeled `USB_BKP`, and
-- saves the images to the subfolder `backup` (of the mounted folder):
+[//]: # ( To save our data, we choose `backup` as name of the folder in our backup partition: )
 
 ```sh
 MOUNT=/mnt
 BKP_LABEL=USB_BKP
-BKP_SUBFOLDER=backup
 
 BKP_MOUNT="$MOUNT"/"$BKP_LABEL"
 mkdir --parents "$BKP_MOUNT"
-mount --types ntfs LABEL="$BKP_LABEL" --target "$BKP_MOUNT"
+mount /dev/sdb1 "$BKP_MOUNT"
 ```
 
-Save images of the root and home partition, skipping folders containing temporary and cache files:
+Copy
+
+- the home partition, skipping trash and cache files, and
+- the root partition, skipping the home folder (which is on a separate partition) and folders that only contain
+  - boot images and kernel modules,
+  - backups
+  - removable media, and
+  - temporary and cache files:
 
 ```sh
-BKP_FOLDER="$BKP_MOUNT"/"$BKP_SUBFOLDER"
+BKP_FOLDER="$BKP_MOUNT"
 
 HOME_FOLDER="/home/$USER"
-fsarchiver --allow-rw-mounted \
-  --exclude="$HOME_FOLDER/.local/share/Trash" \
-  --exclude="$HOME_FOLDER/.cache" \
-  savedir "$BKP_FOLDER/home.fsa" "$HOME_FOLDER"
-# ROOT_FOLDER="/"
-fsarchiver --allow-rw-mounted \
+HOME_BACKUP_FOLDER="$BKP_FOLDER/home"
+mkdir --parents "$HOME_BACKUP_FOLDER"
+
+rsync -avxEHA --delete --human-readable --info=progress2 \
+  --exclude="/.local/share/Trash" \
+  --exclude="/.cache" \
+  "$HOME_FOLDER/" "$HOME_BACKUP_FOLDER/"
+
+ROOT_FOLDER="/"
+ROOT_BACKUP_FOLDER="$BKP_FOLDER/root"
+mkdir --parents "$BKP_FOLDER/root"
+
+rsync -avxEHA --delete --human-readable --info=progress2 \
   --exclude=/home \
+  --exclude='/etc/fstab' \
+  --exclude='/boot/' \
+  --exclude='/lib/' \
+  --exclude='/lib64/' \
+  --exclude='/.snapshots' \
   --exclude='/media' \
   --exclude='/mnt' \
   --exclude='/run' \
@@ -77,57 +94,59 @@ fsarchiver --allow-rw-mounted \
   --exclude='/tmp' \
   --exclude='/var/run' \
   --exclude='/var/lock' \
-  --exclude='/lib/modules/*/volatile/.mounted' \
-  --exclude='/.snapshots' \
-  savedir "$BKP_FOLDER/root.fsa" "$ROOT_FOLDER"
+  --exclude='/var/tmp' \
+  "$ROOT_FOLDER" "$ROOT_BACKUP_FOLDER/"
 
 umount --verbose "$BKP_MOUNT"
 rmdir --verbose "$BKP_MOUNT"
 ```
 
-## Save the backup program
+## Store the backup program
 
-This is not strictly necessary, but avoids depending on fsarchiver been installed on the rescue system or not:
-Copy the `fsarchiver` executable, say `/usr/sbin/fsarchiver` into the `$BKP_FOLDER` by
+This is not strictly necessary, but avoids depending on `rsync` been installed on the rescue system or not:
+Copy the `fsarchiver` executable, say `/usr/bin/rsync` into the `$BKP_FOLDER` by
 
 ```sh
-cp /usr/sbin/fsarchiver $BKP_FOLDER
+cp /usr/bin/rsync $BKP_FOLDER
 ```
 
-## Save the file-system table
-
-This is not strictly necessary, but avoids editing manually certain IDs in the file-system table file `/etc/fstab` after restoring the root partition:
-Copy it into the `$BKP_FOLDER` by
-```sh
-mkdir -p $BKP_FOLDER/etc
-cp /etc/fstab $BKP_FOLDER/etc/fstab
-```
-
-To explain:
-The file `/etc/fstab` mounts file systems, partitions, to directories, for example the root partition `/dev/sda1` to `/` and the home partition `/dev/sda2` to `/home`.
-These file systems are identified by a hexadecimal string, the universal unique identifier (UUID).
-
-When reinstalling, these UUID are reassigned.
-The bootloader uses these reassigned UUIDs,
-We therefore save `/etc/fstab` and restore it afterwards, and thus keep the UUIDs as known to the bootloader.
+[//]: # ( ## Save the file-system table )
+[//]: # (  )
+[//]: # ( This is not strictly necessary, but avoids editing manually certain IDs in the file-system table file `/etc/fstab` after restoring the root partition: )
+[//]: # ( Copy it into the `$BKP_FOLDER` by )
+[//]: # ( ```sh )
+[//]: # ( mkdir -p $BKP_FOLDER/etc )
+[//]: # ( cp /etc/fstab $BKP_FOLDER/etc/fstab )
+[//]: # ( ``` )
+[//]: # (  )
+[//]: # ( To explain: )
+[//]: # ( The file `/etc/fstab` mounts file systems, partitions, to directories, for example the root partition `/dev/sda1` to `/` and the home partition `/dev/sda2` to `/home`. )
+[//]: # ( These file systems are identified by a hexadecimal string, the universal unique identifier (UUID). )
+[//]: # (  )
+[//]: # ( When reinstalling, these UUID are reassigned. )
+[//]: # ( The bootloader uses these reassigned UUIDs, )
+[//]: # ( We therefore save `/etc/fstab` and restore it afterwards, and thus keep the UUIDs as known to the bootloader. )
 
 # Restoring the installation
 
 ## Reinstalling Linux
 
-Install the Linux distribution once in its most basic configuration.
-This serves us to
+To
 
 - partition the hard drive, and
-- install the bootloader (Grub2 in our case).
+- install the bootloader (Grub2 in our case),
 
-Once Linux is installed, boot into a rescue system, such as that on the installation DVD (or USB Stick) of the Linux distribution.
+install the Linux distribution in its most basic configuration (that is, installing as few packages as possible).
+
+Once Linux is installed, boot into a rescue system, such as that on the installation medium (DVD or USB drive) of the Linux distribution.
 Log into a terminal.
-We use `ls -l /dev/disk/by-uuid` to detect which device letter (say `/dev/sda`) is assigned to which hard disk and which number to which partition (say `/dev/sda1`).
+Use `ls -l /dev/disk/by-uuid` to detect which device letter (say `/dev/sda`) is assigned to which hard disk and which number to which partition.
 We note letter and number of the
 
 - backup partition, as well as
 - the root and home partitions.
+
+(For example, `/dev/sda` might be the hard disk, `\dev\sda2` the root partition and `\dev\sda3` the home partition).
 
 ## Restoring the partitions
 
@@ -142,33 +161,16 @@ We mount and then restore the files:
 mkdir -p /mnt/bkp
 mkdir -p /mnt/root
 mkdir -p /mnt/home
+
 mount /dev/sdb1 /mnt/bkp
 mount /dev/sda1 /mnt/root
 mount /dev/sda2 /mnt/home
 
-rm -rf /mnt/root
-rm -rf /mnt/home
-chroot /mnt/bkp/
-  ./fsarchiver restdir root.fsa /mnt/root;
-  ./fsarchiver restdir home.fsa /mnt/home
-exit
-```
-
-We also add empty directories of all those skipped when backing them up:
-
-```sh
-chroot /mnt/root
-  mkdir -p /home
-  mkdir -p /media
-  mkdir -p /mnt
-  mkdir -p /run
-  mkdir -p /dev
-  mkdir -p /proc
-  mkdir -p /sys
-  mkdir -p /tmp
-  mkdir -p /var/run
-  mkdir -p /var/lock
-exit
+cd /mnt/bkp/
+rsync -avxEHA --delete --human-readable --info=progress2 \
+root/ /mnt/root/;
+rsync -avxEHA --delete --human-readable --info=progress2 \
+home/ /mnt/home/
 ```
 
 ## Restoring the bootloader
@@ -195,20 +197,20 @@ exit
 
 ```
 
-## Restoring /etc/fstab
-
-Either
-
-- you saved `/etc/fstab` before restoring the partitions, then copy it to `/etc/fstab` by
-
-```sh
-mkdir -p /mnt/bkp;
-mkdir -p /mnt/root
-mount /dev/sdb1 /mnt/bkp;
-mount /dev/sda1 /mnt/root
-cp /mnt/bkp/etc/fstab /mnt/root/etc/fstab
-```
-or
-
-- otherwise, use `ls -l /dev/disk/by-uuid` to update the UUID entries in `/etc/fstab` accordingly, say by `vim /etc/fstab`.
-
+[//]: # ( ## Restoring /etc/fstab )
+[//]: # (  )
+[//]: # ( Either )
+[//]: # (  )
+[//]: # ( - you saved `/etc/fstab` before restoring the partitions, then copy it to `/etc/fstab` by )
+[//]: # (  )
+[//]: # ( ```sh )
+[//]: # ( mkdir -p /mnt/bkp; )
+[//]: # ( mkdir -p /mnt/root )
+[//]: # ( mount /dev/sdb1 /mnt/bkp; )
+[//]: # ( mount /dev/sda1 /mnt/root )
+[//]: # ( cp /mnt/bkp/etc/fstab /mnt/root/etc/fstab )
+[//]: # ( ``` )
+[//]: # ( or )
+[//]: # (  )
+[//]: # ( - otherwise, use `ls -l /dev/disk/by-uuid` to update the UUID entries in `/etc/fstab` accordingly, say by `vim /etc/fstab`. )
+[//]: # (  )
