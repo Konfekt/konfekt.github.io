@@ -44,7 +44,7 @@ to
 
 ### Accessibility:
 
-Code em `markdown` is easily readable text.
+Code in `markdown` is easily readable text.
 In comparison:
 
 - `Markdown` syntax is handier than `(La)TeX` syntax (Donald Knuth, inventor of `TeX`, wondered why it took so long to evolve from `LaTeX` to a more efficient markup language that compiles down to `TeX`, such as `markdown`),
@@ -73,7 +73,7 @@ In comparison:
 Markdown is simple, concise and intuitive:
 Its cheat-sheet and documentation are one.
 
-![documentation (= cheat-sheet) of the markdown syntax](images/cheatsheet.png "cheatsheet")
+![documentation (= cheat-sheet) of the markdown syntax](/images/cheatsheet.png "cheatsheet")
 
 Examples:
 
