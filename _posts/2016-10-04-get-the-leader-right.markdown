@@ -65,7 +65,7 @@ for example, for random ad-hoc commands.
 
 ---
 
-For consistency and less pinkie pain, add to `nnoremap : ,` and `nnoremap , :` the following mappings:
+For consistency and less pinkie pain, add to `nnoremap : ,` and `nnoremap , :` the following maps:
 
 ```vim
 nnoremap : ,

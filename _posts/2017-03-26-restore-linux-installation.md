@@ -45,10 +45,10 @@ Its advantages:
 [//]: # ( To save our data, we choose `backup` as name of the folder in our backup partition: )
 
 ```sh
-MOUNT=/mnt
-BKP_LABEL=USB_BKP
+MOUNT = /mnt
+BKP_LABEL = USB_BKP
 
-BKP_MOUNT="$MOUNT"/"$BKP_LABEL"
+BKP_MOUNT = "$MOUNT"/"$BKP_LABEL"
 mkdir --parents "$BKP_MOUNT"
 mount /dev/sdb1 "$BKP_MOUNT"
 ```
@@ -63,38 +63,38 @@ Copy
   - temporary and cache files:
 
 ```sh
-BKP_FOLDER="$BKP_MOUNT"
+BKP_FOLDER = "$BKP_MOUNT"
 
-HOME_FOLDER="/home/$USER"
-HOME_BACKUP_FOLDER="$BKP_FOLDER/home"
+HOME_FOLDER = "/home/$USER"
+HOME_BACKUP_FOLDER = "$BKP_FOLDER/home"
 mkdir --parents "$HOME_BACKUP_FOLDER"
 
-rsync -avxEHA --delete --human-readable --info=progress2 \
-  --exclude="/.local/share/Trash" \
-  --exclude="/.cache" \
+rsync -avxEHA --delete --human-readable --info = progress2 \
+  --exclude = "/.local/share/Trash" \
+  --exclude = "/.cache" \
   "$HOME_FOLDER/" "$HOME_BACKUP_FOLDER/"
 
-ROOT_FOLDER="/"
-ROOT_BACKUP_FOLDER="$BKP_FOLDER/root"
+ROOT_FOLDER = "/"
+ROOT_BACKUP_FOLDER = "$BKP_FOLDER/root"
 mkdir --parents "$BKP_FOLDER/root"
 
-rsync -avxEHA --delete --human-readable --info=progress2 \
-  --exclude=/home \
-  --exclude='/etc/fstab' \
-  --exclude='/boot/' \
-  --exclude='/lib/' \
-  --exclude='/lib64/' \
-  --exclude='/.snapshots' \
-  --exclude='/media' \
-  --exclude='/mnt' \
-  --exclude='/run' \
-  --exclude='/dev' \
-  --exclude='/proc' \
-  --exclude='/sys' \
-  --exclude='/tmp' \
-  --exclude='/var/run' \
-  --exclude='/var/lock' \
-  --exclude='/var/tmp' \
+rsync -avxEHA --delete --human-readable --info = progress2 \
+  --exclude = /home \
+  --exclude = '/etc/fstab' \
+  --exclude = '/boot/' \
+  --exclude = '/lib/' \
+  --exclude = '/lib64/' \
+  --exclude = '/.snapshots' \
+  --exclude = '/media' \
+  --exclude = '/mnt' \
+  --exclude = '/run' \
+  --exclude = '/dev' \
+  --exclude = '/proc' \
+  --exclude = '/sys' \
+  --exclude = '/tmp' \
+  --exclude = '/var/run' \
+  --exclude = '/var/lock' \
+  --exclude = '/var/tmp' \
   "$ROOT_FOLDER" "$ROOT_BACKUP_FOLDER/"
 
 umount --verbose "$BKP_MOUNT"
@@ -167,9 +167,9 @@ mount /dev/sda1 /mnt/root
 mount /dev/sda2 /mnt/home
 
 cd /mnt/bkp/
-rsync -avxEHA --delete --human-readable --info=progress2 \
+rsync -avxEHA --delete --human-readable --info = progress2 \
 root/ /mnt/root/;
-rsync -avxEHA --delete --human-readable --info=progress2 \
+rsync -avxEHA --delete --human-readable --info = progress2 \
 home/ /mnt/home/
 ```
 
