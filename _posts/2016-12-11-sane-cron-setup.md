@@ -44,10 +44,10 @@ Run the executables in the folders
 | | | on_line_ac/
 ```
 
-daily (in anacron.daily), weekly (in anacron.weekly) and monthly (in anacron.monthly) either
+daily (in `anacron.daily`), weekly (in `anacron.weekly`) and monthly (in `anacron.monthly`) either
 
 - unconditionally (in `on`),
-- when on AC/DC, for example, updating a file index (in `on_ac`),
+- when on power supply (= AC/DC), for example, updating a file index (in `on_ac`),
 - when online, for example, updating an online backup (in `on_line`), or
 - when on power supply and online, for example, updating software (in `on_line_ac`).
 
@@ -92,7 +92,7 @@ First, `anacrontab_on_line_ac.sh` runs anacron only if the computer is  online a
 #!/bin/sh
 
 # Do not run jobs when on battery power
-(command -v on_ac_power >/dev/null 2>&1 && on_ac_power) || exit 0
+(command -v on_ac_power >/dev/null /2> &1 && on_ac_power) || exit 0
 
 # Do not run jobs when off-line
 # (command -v nm-online >/dev/null /2> &1 && nm-online --timeout=10 --quiet) || exit 0
@@ -121,7 +121,7 @@ and `anacrontab_on_ac.sh` runs anacron only if the computer is on AC/DC, and rea
 #!/bin/sh
 
 # Do not run jobs when on battery power
-(command -v on_ac_power >/dev/null 2>&1 && on_ac_power) || exit 0
+(command -v on_ac_power >/dev/null /2> &1 && on_ac_power) || exit 0
 
 mkdir --parents "$XDG_CACHE_HOME/anacron"
 /usr/sbin/anacron -S "$XDG_CACHE_HOME/anacron" -t "$XDG_CONFIG_HOME/anacrontab/on_line_ac" -s
@@ -152,16 +152,16 @@ First, `~/.config/anacrontab/on_line_ac` runs all due daily, weekly and monthly 
 It reads
 
 ```
-SHELL=/bin/bash
-USER=konfekt
-HOME=/home/konfekt
-BASH_ENV=/home/konfekt/.bash_profile
-XDG_CONFIG_HOME=/home/konfekt/.config
-XDG_CACHE_HOME=/home/konfekt/.cache
-XDG_DATA_HOME=/home/konfekt/.local/share
-PATH=/home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-# RANDOM_DELAY=5
-# START_HOURS_RANGE=10-16
+SHELL = /bin/bash
+USER = konfekt
+HOME = /home/konfekt
+BASH_ENV = /home/konfekt/.bash_profile
+XDG_CONFIG_HOME = /home/konfekt/.config
+XDG_CACHE_HOME = /home/konfekt/.cache
+XDG_DATA_HOME = /home/konfekt/.local/share
+PATH = /home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+# RANDOM_DELAY = 5
+# START_HOURS_RANGE = 10-16
 
 # period  delay  job-identifier    command
 @daily    0      daily.on_line_ac  chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/anacron.daily/on_line_ac > "$XDG_CACHE_HOME/anacron/daily.on_line_ac.log"
@@ -188,19 +188,19 @@ Add a file
 with content
 
 ```sh
-SHELL=/bin/bash
-USER=konfekt
-HOME=/home/konfekt
-BASH_ENV=/home/konfekt/.bash_profile
-XDG_CONFIG_HOME=/home/konfekt/.config
-XDG_CACHE_HOME=/home/konfekt/.cache
-XDG_DATA_HOME=/home/konfekt/.local/share
-PATH=/home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-# RANDOM_DELAY=5
-# START_HOURS_RANGE=10-16
+SHELL = /bin/bash
+USER = konfekt
+HOME = /home/konfekt
+BASH_ENV = /home/konfekt/.bash_profile
+XDG_CONFIG_HOME = /home/konfekt/.config
+XDG_CACHE_HOME = /home/konfekt/.cache
+XDG_DATA_HOME = /home/konfekt/.local/share
+PATH = /home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+# RANDOM_DELAY = 5
+# START_HOURS_RANGE = 10-16
 
 # period                  command
-0,10,20,30,40,50 * * * *  chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/cron.hourly > "$XDG_CACHE_HOME/cron.hourly.log" 2>&1
+* * * * * *  chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/cron.hourly > "$XDG_CACHE_HOME/cron.hourly.log" /2> &1
 ```
 
 On the terminal, run
@@ -209,7 +209,7 @@ On the terminal, run
 crontab ~/.config/crontab
 ```
 
-This way, `cron` checks, via `anacron`, every ten minutes, for all due (daily, weekly and monthly) jobs to be run unconditionally or when the computer is either online, on AC/DC, or online and on AC/DC.
+This way, `cron` checks, via `anacron`, every minute for all due (daily, weekly and monthly) jobs to be run unconditionally or when the computer is either online, on AC/DC, or online and on AC/DC.
 
 
 # Extras
@@ -226,7 +226,7 @@ eval "$(keychain --agents ssh --quiet --eval ~/.ssh/id_rsa)"
 (for example, `KDE` has the folder `~/.config/autostart-scripts` for this purpose) and call
 
 ```sh
-[ -z "$HOSTNAME" ] && HOSTNAME="$(uname -n)"
+[ -z "$HOSTNAME" ] && HOSTNAME = "$(uname -n)"
 [ -f ~/.keychain/"$HOSTNAME"-sh ] && . ~/.keychain/"$HOSTNAME"-sh
 ```
 
@@ -243,22 +243,21 @@ see [this repository](https://github.com/Konfekt/backup2cloud.sh) for an expande
 # set up keychain to pass passphrase to ssh in cron jobs
 [ -z "$HOSTNAME" ] && HOSTNAME="$(uname -n)"
 [ -f ~/.keychain/"$HOSTNAME"-sh ] && . ~/.keychain/"$HOSTNAME"-sh
-
 # CONFIG
-FROM_FOLDER=$HOME
-TO_FOLDER="$USER@rsync.server.com:/users/$USER"
+FROM_FOLDER = $HOME
+TO_FOLDER = "$USER@rsync.server.com:/users/$USER"
 
 FILES_FILE=$XDG_CONFIG_HOME/backup/files
 EXCLUDE_FILE=$XDG_CONFIG_HOME/backup/exclude
 
-LOG_FILE=$XDG_CACHE_HOME/backup/cloud/log
+LOG_FILE = $XDG_CACHE_HOME/backup/cloud/log
 
 # because --files-from disables --recursive in --archive it must enable explicitly
 RSYNC_BKP_ARGS="--recursive --archive --hard-links --ignore-errors --modify-window=1 --delete --compress --partial --human-readable --info=progress2 "
 SSH_ARGS="-v -P"
 
 # BACKUP Local -> Server:
-LOG_FILE_DIR=$(dirname "${LOG_FILE}")
+LOG_FILE_DIR = $(dirname "${LOG_FILE}")
 mkdir --parents "$LOG_FILE_DIR"
 
 rsync $RSYNC_BKP_ARGS --rsh="ssh $SSH_ARGS" --log-file="$LOG_FILE" --files-from="$FILES_FILE" --exclude-from="$EXCLUDE_FILE" "$FROM_FOLDER" "$TO_FOLDER"

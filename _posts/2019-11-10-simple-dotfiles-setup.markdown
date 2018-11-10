@@ -85,6 +85,7 @@ Here, we propose to:
     !/.bash_profile
     !/.profile
 
+    # only track rc and rifle.conf inside ranger/
     !/ranger/
     /ranger/*
     !/ranger/rc.conf
@@ -99,7 +100,12 @@ Here, we propose to:
     ```
 
     This way, all files are ignored except those listed below the first line.
-    Note that to ignore all but specific files in a subfolder, the construction given below, for the folder `/ranger` has to be used.
+
+    Note that
+
+    - to ignore all but specific files in a subfolder, the construction given below, for the folder `/ranger` has to be used, and
+    - albeit we speak of `dotfiles`, of course entire `dotfolders` such as `~/.vim/` can be symlinked to and put under version control.
+
 0. Initialize your repository by
 
     ```sh

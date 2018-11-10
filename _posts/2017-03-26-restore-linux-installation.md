@@ -121,7 +121,6 @@ To save the partitions:
 <!-- When reinstalling, these UUID are reassigned.  -->
 <!-- The bootloader uses these reassigned UUIDs,  -->
 <!-- We therefore save `/etc/fstab` and restore it afterwards, and thus keep the UUIDs as known to the bootloader.  -->
-
 # Restoring the installation
 
 To restore the installation,
@@ -168,9 +167,9 @@ mount /dev/sda1 /mnt/root
 mount /dev/sda2 /mnt/home
 
 cd /mnt/bkp/
-rsync -avxEHA --delete --human-readable --info=progress2 \
+rsync -avxEHA --delete --human-readable --info = progress2 \
 root/ /mnt/root/;
-rsync -avxEHA --delete --human-readable --info=progress2 \
+rsync -avxEHA --delete --human-readable --info = progress2 \
 home/ /mnt/home/
 ```
 

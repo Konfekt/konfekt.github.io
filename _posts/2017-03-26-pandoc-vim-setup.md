@@ -136,11 +136,11 @@ We can pass many options to `pandoc`, among those the most important ones (for u
 ```sh
 General options:
 
-  --from=FORMAT
+  --from = FORMAT
    Specify input FORMAT such as markdown, rst, ..
-  --to=FORMAT
+  --to = FORMAT
      Specify output FORMAT such as html, LaTeX, ..
-  --output=FILE
+  --output = FILE
      Write output to FILE instead of stdout.
 
 Writer options:
@@ -164,9 +164,9 @@ By a makefile, instead of having to pass the options for
 each time on the command line, we call `make (run/check/clean)` and use those once and for all set in the makefile.
 
 ```sh
-NAME=main
-FILES=intro.md content.md conclusion.md
-DEP=$(NAME).pandoc $(FILES)
+NAME = main
+FILES = intro.md content.md conclusion.md
+DEP = $(NAME).pandoc $(FILES)
 
 PANDOC_OPTIONS=--standalone \
 		--toc --number-sections \
@@ -277,9 +277,9 @@ Below, additional options,
 lang:                 pt
 
 # latex:
-babel-lang:           brazil
+babel-lang:           brazilian
 documentclass:        scrartcl
-classoption:          final,DIV=calc,headings=normal,bibliography=totoc
+classoption:          final,DIV = calc,headings = normal,bibliography = totoc
 fontsize:             12pt
 citecolor:            Sepia
 linkcolor:            Sepia
@@ -311,7 +311,7 @@ If the output is
 
 The plugin `vim-pandoc`
 
-- completes references in your library when hitting the `<Tab>` key.
+- completes references in your library when hitting the ` < Tab > ` key.
 - folds sections and code,
 - gives a Table of Contents.
 
