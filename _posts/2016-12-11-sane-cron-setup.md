@@ -243,7 +243,8 @@ before the cron job, for example one using rsync to back up files to a distant S
 
 # Example
 
-For an example anacron job, here is a shell script backs up all the files inside the home directory listed in `files` to a server.
+For an example anacron job, here is a sample shell script which backs up all the files inside the home directory that are listed in `files`, except those listed in `exclude`, to a server;
+see [this repository](https://konfekt.github.com/backup2cloud.sh) for an expanded version and full instructions:
 
 ```sh
 #!/bin/bash
@@ -257,7 +258,6 @@ FROM_FOLDER = $HOME
 TO_FOLDER = "$USER@rsync.server.com:/users/$USER"
 
 FILES_FILE = $XDG_CONFIG_HOME/backup/files
-INCLUDE_FILE = $XDG_CONFIG_HOME/backup/include
 EXCLUDE_FILE = $XDG_CONFIG_HOME/backup/exclude
 
 LOG_FILE = $XDG_CACHE_HOME/backup/cloud/log
@@ -269,7 +269,7 @@ SSH_ARGS = "-v -P"
 LOG_FILE_DIR = $(dirname "${LOG_FILE}")
 mkdir --parents "$LOG_FILE_DIR"
 
-rsync $RSYNC_BKP_ARGS --rsh = "ssh $SSH_ARGS" --log-file = "$LOG_FILE" --include-from = "$INCLUDE_FILE" --files-from = "$FILES_FILE" --exclude-from = "$EXCLUDE_FILE" "$FROM_FOLDER" "$TO_FOLDER"
+rsync $RSYNC_BKP_ARGS --rsh = "ssh $SSH_ARGS" --log-file = "$LOG_FILE" --files-from = "$FILES_FILE" --exclude-from = "$EXCLUDE_FILE" "$FROM_FOLDER" "$TO_FOLDER"
 ```
 
 To run it daily, place it in :
