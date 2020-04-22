@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "A simple dotfiles setup"
+title: "Dead-simple dotfiles Management"
 date: 2018-11-10
-categories: dotfiles version control git linux
+categories: dotfiles version control git linux MacOS
 comments: true
 ---
 
@@ -50,4 +50,14 @@ To use your dotfiles elsewhere,
 
 1. Copy `~/.config`
 0. Execute `symlink-dotfiles.sh`.
+
+# Comparison
+
+This approach is similar to [this](https://drewdevault.com/2019/12/30/dotfiles.html), in being explicit about adding one's dotfiles,
+
+- there by forcefully adding them through `git add --force`,
+- here by listing them in an inverted `.gitignore` and symlinking all its files whose name starts with a `.` by `ln --symbolic ~/.config/.* ~/`.
+
+Possibly cleaner than this approach is [aliasing git to a command dotfiles](https://blog.alionet.org/fr/2020-03-29_gerer_ses_dotfiles_avec_git) that stores the `~/.git` folder somewhere else, say in `~/.dotfiles` to get out of the way in the home folder `~`;
+[yadm](https://github.com/TheLocehiliosan/yadm/blob/master/yadm) seems to have fleshed this out.
 
