@@ -15,7 +15,7 @@ Restore a Linux installation,
 
 onto another hardware.
 
-We assume that the installed Linux system (in our case, it happened to be OpenSUSE 42.2) uses
+We assume that the installed Linux system (in our case, it happened to be openSUSE 42.2) uses
 
 - the bootloader grub2
 

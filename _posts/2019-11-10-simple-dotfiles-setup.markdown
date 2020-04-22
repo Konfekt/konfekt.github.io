@@ -69,3 +69,9 @@ To use your dotfiles elsewhere,
 1. Copy `~/.config`
 0. Execute `symlink-dotfiles.sh`.
 
+# Comparison
+
+Possible cleaner than my approach is [aliasing git to dotfiles](https://blog.alionet.org/fr/2020-03-29_gerer_ses_dotfiles_avec_git).
+[yadm](https://github.com/TheLocehiliosan/yadm/blob/master/yadm) seems to be a fancy version of this.
+My approach is similar to [this](https://drewdevault.com/2019/12/30/dotfiles.html), in being explicit about adding dotfiles by an inverted `.gitignore`, but symlinks all files whose name starts with a `.`.
+
