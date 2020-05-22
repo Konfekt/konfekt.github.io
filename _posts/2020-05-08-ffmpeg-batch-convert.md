@@ -34,15 +34,16 @@ This script converts in a single pass, faster, but accepting suboptimal quality:
 
 convert() {
   echo "Started processing $1 ..."
+  cpu_cores="$(getconf _NPROCESSORS_ONL)"
   ffmpeg \
-  -y -loglevel fatal \
-  -i "$1" \
-  -cpu-used 1 -quality good \
-  -tile-columns 2 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 \
-  -c:v libvpx-vp9 -b:v 750k -minrate 375k -maxrate 1088k -crf 33 \
-  -c:a libopus -ac 2 -b:a 48k -vbr on -compression_level 10 -frame_duration 40 -application audio \
-  -movflags faststart \
-  "$2"
+    -y -loglevel error \
+    -i "$1" \
+    -threads "${cpu_cores:-1}" -cpu-used 1 -quality good \
+    -tile-columns 2 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 \
+    -c:v libvpx-vp9 -b:v 750k -minrate 375k -maxrate 1088k -crf 33 \
+    -c:a libopus -ac 2 -b:a 48k -vbr on -compression_level 10 -frame_duration 40 -application audio \
+    -movflags faststart \
+  "${1%.[^.]*}".webm
   echo "... finished processing $1."
   } && export -f convert
 
@@ -65,28 +66,30 @@ This script converts in two passes, slower, but achieving optimal quality:
 # Double pass for optimal quality but slower conversion:
 
 convert() {
+cpu_cores="$(getconf _NPROCESSORS_ONL)"
 echo "Started first pass processing $1 ..."
 ffmpeg \
-  -y -loglevel fatal \
+  -y -loglevel error \
   -i "$1" \
   -pass 1 -speed 4 \
-  -cpu-used 1 -quality good \
+  -threads "${cpu_cores:-1}" -cpu-used 1 -quality good \
   -tile-columns 4 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 \
   -c:v libvpx-vp9 -b:v 750k -minrate 375k -maxrate 1088k -crf 33 \
   -c:a libopus -ac 2 -b:a 48k -vbr on -compression_level 10 -frame_duration 40 -application audio \
   -movflags faststart \
+  -f webm \
   /dev/null &&
   echo "... finished first and started second pass processing $1 ..."
 ffmpeg \
-  -y -loglevel fatal \
+  -y -loglevel error \
   -i "$1" \
   -pass 2 -speed 1 \
-  -cpu-used 1 -quality good \
+  -threads "${cpu_cores:-1}" -cpu-used 1 -quality good \
   -tile-columns 4 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 \
   -c:v libvpx-vp9 -b:v 750k -minrate 375k -maxrate 1088k -crf 33 \
   -c:a libopus -ac 2 -b:a 48k -vbr on -compression_level 10 -frame_duration 40 -application audio \
   -movflags faststart \
-  "$2" &&
+  "${1%.[^.]*}".webm &&
   echo "... finished second and last pass processing $1."
 } && export -f convert
 
