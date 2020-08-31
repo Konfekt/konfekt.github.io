@@ -215,7 +215,7 @@ run-odt: odt
 run-html: html
 		$(BROWSER) $(NAME).html
 run-pdf: pdf
-		$(DFVIEWER) $(NAME).pdf \
+		$(PDFVIEWER) $(NAME).pdf \
 		>/dev/null /2> &1 &
 
 clean: clean-docx clean-odt clean-html clean-pdf
