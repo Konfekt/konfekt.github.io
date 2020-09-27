@@ -152,25 +152,43 @@ To restore the installation,
 
 We assume that
 
-- the backup partition is `/dev/sdb1`, and
-- the root and home partitions are `/dev/sda1` and `/dev/sda2`.
+- the backup partition is `/dev/sdb2`, and
+- the root and home partitions are `/dev/sda2` and `/dev/sda3`.
 
 To first mount and then restore the files:
 
 ```sh
-mkdir -p /mnt/bkp
-mkdir -p /mnt/root
-mkdir -p /mnt/home
+mkdir -p /mnt/bkp && mount /dev/sdb2 /mnt/bkp
 
-mount /dev/sdb1 /mnt/bkp
-mount /dev/sda1 /mnt/root
-mount /dev/sda2 /mnt/home
-
+(
 cd /mnt/bkp/
-rsync -avxEHA --delete --human-readable --info = progress2 \
-root/ /mnt/root/;
-rsync -avxEHA --delete --human-readable --info = progress2 \
-home/ /mnt/home/
+
+mkdir -p /mnt/root && mount /dev/sda2 /mnt/root
+rsync \
+  --info=stats1,progress2 --human-readable --compress \
+  --archive --executability --hard-links --modify-window=1 --acls --xattrs \
+  --update --delete \
+  --exclude='/home' \
+  --exclude='/.snapshots' \
+  --exclude='/media' \
+  --exclude='/mnt' \
+  --exclude='/run' \
+  --exclude='/dev' \
+  --exclude='/proc' \
+  --exclude='/sys' \
+  --exclude='/tmp' \
+  --exclude='/var/run' \
+  --exclude='/var/lock' \
+  --exclude='/var/tmp' \
+  ./ /mnt/root/
+
+mkdir -p /mnt/home && mount /dev/sda3 /mnt/home
+rsync \
+  --info=stats1,progress2 --human-readable --compress \
+  --archive --executability --hard-links --modify-window=1 --acls --xattrs \
+  --update --delete \
+  ./home/ /mnt/home/
+)
 ```
 
 ## Restoring the bootloader
@@ -179,19 +197,23 @@ We assume (as above) that the root partition is `/dev/sda1`.
 To restore the bootloader:
 
 ```sh
-mkdir -p /mnt/root
-mount /dev/sda1 /mnt/root
-mkdir -p /mnt/root/dev
-mount --bind /dev /mnt/root/dev
+mkdir -p /mnt/root && mount /dev/sda2 -t btrfs /mnt;
 
+mount /dev/sda2 -o subvol=/@/boot/grub2/x86_64-efi  /mnt/boot/grub2/x86_64-efi;
+mount /dev/sda2 -o subvol=/@/boot/grub2/i386-pc     /mnt/boot/grub2/i386-pc;
+mount /dev/sda2 -o subvol=/@/var                    /mnt/var;
+mount /dev/sda2 -o subvol=/@/usr/local              /mnt/usr/local;
+mount /dev/sda2 -o subvol=/@/tmp                    /mnt/tmp;
+mount /dev/sda2 -o subvol=/@/srv                    /mnt/srv;
+mount /dev/sda2 -o subvol=/@/root                   /mnt/root;
+mount /dev/sda2 -o subvol=/@/opt                    /mnt/opt;
+
+mkdir -p /mnt/root/dev && mount --bind /dev      /mnt/root/dev
 chroot /mnt/root
-  mkdir -p /mnt/root/proc
-  mount -t proc proc /proc
-  mkdir -p /mnt/root/sys
-  mount -t sysfs sysfs /sys
+  mkdir -p /mnt/root/proc && mount -t proc  proc  /proc
+  mkdir -p /mnt/root/sys  && mount -t sysfs sysfs /sys
 
-  grub2-mkconfig -o /boot/grub2/grub.cfg
-  grub2-install /dev/sda
+  grub2-mkconfig -o /boot/grub2/grub.cfg && grub2-install /dev/sda
 exit
 ```
 
