@@ -152,16 +152,16 @@ First, `~/.config/anacrontab/on_line_ac` runs all due daily, weekly and monthly 
 It reads
 
 ```
-SHELL = /bin/bash
-USER = konfekt
-HOME = /home/konfekt
-BASH_ENV = /home/konfekt/.bash_profile
-XDG_CONFIG_HOME = /home/konfekt/.config
-XDG_CACHE_HOME = /home/konfekt/.cache
-XDG_DATA_HOME = /home/konfekt/.local/share
-PATH = /home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-# RANDOM_DELAY = 5
-# START_HOURS_RANGE = 10-16
+SHELL=/bin/bash
+USER=konfekt
+HOME=/home/konfekt
+BASH_ENV=/home/konfekt/.bash_profile
+XDG_CONFIG_HOME=/home/konfekt/.config
+XDG_CACHE_HOME=/home/konfekt/.cache
+XDG_DATA_HOME=/home/konfekt/.local/share
+PATH=/home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+# RANDOM_DELAY=5
+# START_HOURS_RANGE=10-16
 
 # period  delay  job-identifier    command
 @daily    0      daily.on_line_ac  chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/anacron.daily/on_line_ac > "$XDG_CACHE_HOME/anacron/daily.on_line_ac.log"
@@ -188,16 +188,16 @@ Add a file
 with content
 
 ```sh
-SHELL = /bin/bash
-USER = konfekt
-HOME = /home/konfekt
-BASH_ENV = /home/konfekt/.bash_profile
-XDG_CONFIG_HOME = /home/konfekt/.config
-XDG_CACHE_HOME = /home/konfekt/.cache
-XDG_DATA_HOME = /home/konfekt/.local/share
-PATH = /home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-# RANDOM_DELAY = 5
-# START_HOURS_RANGE = 10-16
+SHELL=/bin/bash
+USER=konfekt
+HOME=/home/konfekt
+BASH_ENV=/home/konfekt/.bash_profile
+XDG_CONFIG_HOME=/home/konfekt/.config
+XDG_CACHE_HOME=/home/konfekt/.cache
+XDG_DATA_HOME=/home/konfekt/.local/share
+PATH=/home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+# RANDOM_DELAY=5
+# START_HOURS_RANGE=10-16
 
 # period                  command
 * * * * * *  chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/cron.hourly > "$XDG_CACHE_HOME/cron.hourly.log" /2> &1
@@ -226,7 +226,7 @@ eval "$(keychain --agents ssh --quiet --eval ~/.ssh/id_rsa)"
 (for example, `KDE` has the folder `~/.config/autostart-scripts` for this purpose) and call
 
 ```sh
-[ -z "$HOSTNAME" ] && HOSTNAME = "$(uname -n)"
+[ -z "$HOSTNAME" ] && HOSTNAME="$(uname -n)"
 [ -f ~/.keychain/"$HOSTNAME"-sh ] && . ~/.keychain/"$HOSTNAME"-sh
 ```
 
@@ -244,20 +244,20 @@ see [this repository](https://github.com/Konfekt/backup2cloud.sh) for an expande
 [ -z "$HOSTNAME" ] && HOSTNAME="$(uname -n)"
 [ -f ~/.keychain/"$HOSTNAME"-sh ] && . ~/.keychain/"$HOSTNAME"-sh
 # CONFIG
-FROM_FOLDER = $HOME
-TO_FOLDER = "$USER@rsync.server.com:/users/$USER"
+FROM_FOLDER=$HOME
+TO_FOLDER="$USER@rsync.server.com:/users/$USER"
 
 FILES_FILE=$XDG_CONFIG_HOME/backup/files
 EXCLUDE_FILE=$XDG_CONFIG_HOME/backup/exclude
 
-LOG_FILE = $XDG_CACHE_HOME/backup/cloud/log
+LOG_FILE=$XDG_CACHE_HOME/backup/cloud/log
 
 # because --files-from disables --recursive in --archive it must enable explicitly
 RSYNC_BKP_ARGS="--recursive --archive --hard-links --ignore-errors --modify-window=1 --delete --compress --partial --human-readable --info=progress2 "
 SSH_ARGS="-v -P"
 
 # BACKUP Local -> Server:
-LOG_FILE_DIR = $(dirname "${LOG_FILE}")
+LOG_FILE_DIR=$(dirname "${LOG_FILE}")
 mkdir --parents "$LOG_FILE_DIR"
 
 rsync $RSYNC_BKP_ARGS --rsh="ssh $SSH_ARGS" --log-file="$LOG_FILE" --files-from="$FILES_FILE" --exclude-from="$EXCLUDE_FILE" "$FROM_FOLDER" "$TO_FOLDER"
