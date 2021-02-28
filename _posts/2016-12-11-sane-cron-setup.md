@@ -62,9 +62,13 @@ Besides having installed `cron` and `anacron`, the following programs have to be
 - The command-line tool `nm-online` tests whether the computer is online.
     However, the computer may be online, but behind a paywall or certain ports are blocked, such as the port `21` for `SSH`-connections.
     Therefore a better bet for checking connectivity is the program `nc`, though the check depends on a chosen server being up and running, say `github.com`.
-    Both programs are included in many Linux distributions.
-- the schedulers `chrt` and `ionice` run programs in the background, so that they will not hog the CPU respectively hard disc.
-    Both programs are included in many Linux distributions.
+    Both `nm-online` and `nc` are included in many Linux distributions.
+
+- The schedulers `chrt` and `ionice` run programs in the background, so that they will not hog the CPU respectively hard disc.
+    Both `chrt` and `ionice` are included in many Linux distributions.
+- The auxiliary tool `cronic` to pass on (standard out and standard error) output only if the passed command (= cron job) fails (exits nonzero or crashes).
+    For this error output (by default readable by `mailx`) to be most useful, the shell script of every cron job should begin with `set -o xtrace -o errtrace -o errexit -o nounset -o pipefail` to show debug output, exit on error or use of undeclared variable or pipe error.
+    The tiny shell script `cronic` is available at [Chuck Houpt's homepage](http://habilis.net/cronic/) (and one of its many variants, such as `chronic` in Joey Hess's [moreutils](https://joeyh.name/code/moreutils/), included in many Linux distributions).
 
 # Quick-Start
 
@@ -98,8 +102,8 @@ First, `anacrontab_on_line_ac.sh` runs anacron only if the computer is  online a
 # (command -v nm-online >/dev/null /2> &1 && nm-online --timeout=10 --quiet) || exit 0
 (nc -zw3 github.com 22) || exit 0
 
-mkdir --parents "$XDG_CACHE_HOME/anacron"
-/usr/sbin/anacron -S "$XDG_CACHE_HOME/anacron" -t "$XDG_CONFIG_HOME/anacrontab/on_line_ac" -s
+mkdir --parents "$XDG_DATA_HOME/anacron"
+/usr/sbin/anacron -S "$XDG_DATA_HOME/anacron" -t "$XDG_CONFIG_HOME/anacrontab/on_line_ac" -s
 ```
 
 Accordingly `anacrontab_on_line.sh` runs anacron only if the computer is  online, and reads
@@ -111,8 +115,8 @@ Accordingly `anacrontab_on_line.sh` runs anacron only if the computer is  online
 # (command -v nm-online >/dev/null /2> &1 && nm-online --timeout=10 --quiet) || exit 0
 (nc -zw3 github.com 22) || exit 0
 
-mkdir --parents "$XDG_CACHE_HOME/anacron"
-/usr/sbin/anacron -S "$XDG_CACHE_HOME/anacron" -t "$XDG_CONFIG_HOME/anacrontab/on_line_ac" -s
+mkdir --parents "$XDG_DATA_HOME/anacron"
+/usr/sbin/anacron -S "$XDG_DATA_HOME/anacron" -t "$XDG_CONFIG_HOME/anacrontab/on_line_ac" -s
 ```
 
 and `anacrontab_on_ac.sh` runs anacron only if the computer is on AC/DC, and reads
@@ -123,8 +127,8 @@ and `anacrontab_on_ac.sh` runs anacron only if the computer is on AC/DC, and rea
 # Do not run jobs when on battery power
 (command -v on_ac_power >/dev/null /2> &1 && on_ac_power) || exit 0
 
-mkdir --parents "$XDG_CACHE_HOME/anacron"
-/usr/sbin/anacron -S "$XDG_CACHE_HOME/anacron" -t "$XDG_CONFIG_HOME/anacrontab/on_line_ac" -s
+mkdir --parents "$XDG_DATA_HOME/anacron"
+/usr/sbin/anacron -S "$XDG_DATA_HOME/anacron" -t "$XDG_CONFIG_HOME/anacrontab/on_line_ac" -s
 ```
 
 and `anacrontab_on.sh` runs anacron unconditionally, and reads
@@ -132,8 +136,8 @@ and `anacrontab_on.sh` runs anacron unconditionally, and reads
 ```sh
 #!/bin/sh
 
-mkdir --parents "$XDG_CACHE_HOME/anacron"
-/usr/sbin/anacron -S "$XDG_CACHE_HOME/anacron" -t "$XDG_CONFIG_HOME/anacrontab/on_line_ac" -s
+mkdir --parents "$XDG_DATA_HOME/anacron"
+/usr/sbin/anacron -S "$XDG_DATA_HOME/anacron" -t "$XDG_CONFIG_HOME/anacrontab/on_line_ac" -s
 ```
 
 ## Setting up Anacron
@@ -163,10 +167,10 @@ PATH=/home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 # RANDOM_DELAY=5
 # START_HOURS_RANGE=10-16
 
-# period  delay  job-identifier    command
-@daily    0      daily.on_line_ac  chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/anacron.daily/on_line_ac > "$XDG_CACHE_HOME/anacron/daily.on_line_ac.log"
-@weekly   5      weekly.on_line_ac       chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/anacron.weekly/on_line_ac > "$XDG_CACHE_HOME/anacron/weekly.on_line_ac.log"
-@monthly  10     monthly.on_line_ac      chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/anacron.monthly/on_line_ac > "$XDG_CACHE_HOME/anacron/monthly.on_line_ac.log"
+# period  delay  job-identifier         command
+1         0      daily.on_line_ac       cronic chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/anacron.daily/on_line_ac
+7         5      weekly.on_line_ac      cronic chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/anacron.weekly/on_line_ac
+@monthly  10     monthly.on_line_ac     cronic chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/anacron.monthly/on_line_ac
 ```
 
 Accordingly,
@@ -199,8 +203,8 @@ PATH=/home/konfekt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 # RANDOM_DELAY=5
 # START_HOURS_RANGE=10-16
 
-# period                  command
-* * * * * *  chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/cron.hourly > "$XDG_CACHE_HOME/cron.hourly.log" /2> &1
+# period        command
+* * * * * *     cronic chrt --idle 0 ionice -c2 -n7 run-parts.sh -v $XDG_CONFIG_HOME/cron.hourly
 ```
 
 On the terminal, run
@@ -239,6 +243,8 @@ see [this repository](https://github.com/Konfekt/backup2cloud.sh) for an expande
 
 ```sh
 #!/bin/bash
+
+set -o xtrace -o errtrace -o errexit -o nounset -o pipefail
 
 # set up keychain to pass passphrase to ssh in cron jobs
 [ -z "$HOSTNAME" ] && HOSTNAME="$(uname -n)"
