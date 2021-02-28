@@ -74,7 +74,7 @@ In comparison:
 Markdown is simple, concise and intuitive:
 Its cheat-sheet and documentation are one.
 
-![documentation (= cheat-sheet) of the markdown syntax](/images/cheatsheet.png "cheatsheet")
+![documentation (= cheat-sheet) of the markdown syntax](../images/cheatsheet.png "cheatsheet")
 
 Examples:
 
