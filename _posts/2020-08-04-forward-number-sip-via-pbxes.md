@@ -47,14 +47,16 @@ follow these instructions:
 
 # Placing Outward Calls
 
-To call others, you can do so by a regular phone call:
+To call others, you can use regular phone calls or a (smartphone) VOIP client directly or via PBXes:
+
+## Regular Phone Calls
 
 1. Call a local access number, of which there are a couple of them in each country, all consultable at the [geo](https://www.intervoip.com/geo) page of your [`Betamax` reseller](http://backsla.sh/did) (and with varying numbers among them), and
 1. Dial on your (virtual) phone pad the destination number.
 
 The number is called after the charged tariff has been announced.
 
-Or you can make calls on a smartphone VOIP client:
+## Smartphone VOIP Client via UDP
 
 On Android, open source clients are
 
@@ -68,6 +70,11 @@ and various solid commercial ones, such as
 
 Once installed, set up your account in your VOIP client as indicated on the [SIP page](https://www.intervoip.com/sip).
 
+This setup uses UDP to receive calls.
+Using TCP to establish a connection instead of UDP, will save battery of your cellphone when the SIP client is idly waiting for incoming calls, as follows:
+
+## Smartphone VOIP Client via TCP/IP
+
 More flexible and (cellphone) battery friendly is to:
 
 1. Add to your virtual PBX at `pbxes.org`
@@ -76,7 +83,7 @@ More flexible and (cellphone) battery friendly is to:
     - add an outgoing rule that forwards the calls to your `Betamax` reseller, say `Intervoip` by  entering your username, password and the SIP server address, say `sip.intervoip.com`.
         The rule can, for example, pick the account of that Betamax reseller with the cheapest tariffs to the destination number according to its international prefix (and for national landline calls for chivalry use the DID provider).
 
-1. In your VOIP client, set up your SIP account (using TCP to establish a connection instead of UDP, thus saving battery of your cellphone when the SIP client is idly waiting for incoming calls) at `pbxes.org` by entering the username `john-100` (where the first part before the dash `john` is the pbxes account name and the last part `100` is the extension number), password and the SIP server address `pbxes.com`
+1. In your VOIP client, set up your SIP account at `pbxes.org` by entering the username `john-100` (where the first part before the dash `john` is the pbxes account name and the last part `100` is the extension number), password and the SIP server address `pbxes.com`
 
 <!-- private branch exchange (PBX) = -->
 <!--  -->
