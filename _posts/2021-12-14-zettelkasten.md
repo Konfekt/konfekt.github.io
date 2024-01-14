@@ -6,44 +6,43 @@ categories: Zettelkasten Vim
 comments: true
 ---
 
-Buzz for the [Zettelkasten](https://zettelkasten.de/) note taking system is on the rise, in which  all text files are gathered in a single folder, optionally linked to each other by their names, and a particular file is retrieved by searching for its content:
-A **Zettelkasten** is a folder of assorted (text) files, called **zettels**, that (can) link to each other by their names.
-Historically, the file folder is rather a card file box, whereas nowadays it is a directory to store (text) files (in Markdown format).
+Buzz around the [Zettelkasten](https://zettelkasten.de/) note-taking method is on the rise, in which  all text files are gathered in a single folder and can be interlinked by name.
+Files are accessed by searching their content.
 
-# Concept
+# Zettelkasten: Embracing Tags Over Folders
 
-Folders, be it of paper or digital data, are a classic concept to sort files.
-However a file rarely fits exclusively into a single folder.
-If we think of the folder as a tag, given by its name, then a folder attaches a single tag to a file;
-however, usually multiple tags match a file.
+A **Zettelkasten** consists of assorted text files, or **zettels**, which may link to each other by name.
+Traditionally, these were stored in a card file box; today, they are kept in a digital directory, often in Markdown format.
 
-Since nowadays searching for words through thousands of files is a matter of milliseconds, assigning multiple tags to a file and retrieving it by searching for them is at least as fast as storing it in (multiple) folders and searching for one of them.
-Attaching tags (that is, writing them into the text file) is however more convenient than putting the same file into multiple folders, especially since these tags usually need not be explicitly added, but already appear in the text.
-It is also closer to how our mind works, as it re(dis)covers a file from memory by recollecting assorted words of its content, rather than a single title or tag.
+Folders, whether paper-based or digital, traditionally organize files.
+However, since our computers (with tools like `(rip)grep`) search across the contents of thousands of files in milliseconds, a folder tree to organize files is no longer required:
 
-# Usage 
+If we think of the folder as a category tag, then a folder attaches a single tag to a file;
+yet, a file often pertains to more than one category.
+Tagging, which integrates keywords directly into the text, is by any means much more practical than managing multiple folders;
+even more so since these tags usually need not be explicitly added, but already appear in the text.
+(Similar to finding a browser bookmark by its title instead of folder navigation.)
 
-Instead of sorting files by folders, that is, attaching to each file a single tag, the name of the folder, write key words into each file (or let the content speak for itself) and search for them (by a text searcher such as `grep`, `rg` or `ag`).
-Similar to how you search for one of your browser's bookmarks by its title in the address bar instead of looking for it among possible folders.
+Best, this method aligns with the workings of our mind, as we often recall files by remembering related words rather than a single label.
 
-To ease the creation of zettels, we wish:
+# Convenient Note and Link Creation by Keywords
 
-- to create a note with the given search terms, if none existed yet, 
-- to insert a link to a note by searching for its content,
-- to open a linked note by positioning the cursor on its link and then hitting a some key combination.
+Our Zettelkasten should enable us to:
 
-What follows is an implementation of such a Zettelkasten manager in [Vim](https://www.vim.org):
+- automatically create a note with designated search terms if absent,
+- insert a link to a note through content searches, and
+- open linked notes by placing the cursor near the link and some key combo.
 
-# Vim Implementation
+Here's our take on implementing such a note-taking system in Vim:
 
-Below a configuration of [notational-fzf-vim](https://github.com/alok/notational-fzf-vim) that comes with a command (`:NV`) to fuzzily find a note by its content.
+A configuration of [notational-fzf-vim](https://github.com/alok/notational-fzf-vim) that comes with a command (`:NV`) to fuzzily find a note by its content.
 The clou of [notational-fzf-vim](https://github.com/alok/notational-fzf-vim) (using below adaption of `NV_note_handler()`):
 if no note is found (or a special key combination, say `'ctrl-x`, is hit), then one is created, with its title given by the search terms (whose separating blanks are replaced with hyphens).
 
 The paths of the Zettelkasten (and additional folders of notes) are listed in `g:nv_search_paths`, that of the Zettelkasten coming first.
 To jump to a note, type `gf` when the cursor is on the file name (made possible by including `g:nv_search_paths` in `&path` and setting `&suffixesadd`).
 
-Finally, a link to a note can be inserted by hitting `ctrl-z` (customizable by `g:insert_note_key`) that searches for the term before the cursor, which can then be refined in a fuzzy searcher.
+Finally, a link to a note can be inserted by hitting `C(trl)-z` (customizable by `g:insert_note_key`) that searches for the term before the cursor, which can then be refined in a fuzzy searcher.
 
 ```vim
 " set up search paths
@@ -91,14 +90,14 @@ endfunction
 let s:search_paths = join(map(copy(g:nv_search_paths), 'shellescape(v:val)'))
 function! s:complete_file()
   return fzf#vim#complete({
-        \ 'source':  'rg --follow --smart-case --no-heading --line-number --color never --no-messages "" ' . s:search_paths,
+        \ 'source':  'rg --follow --smart-case --color=never --no-messages --files-with-matches "" ' . s:search_paths,
         \ 'reducer': function('NV_make_note_link'),
-        \ 'options': '--multi --reverse --margin 15%,0',
+        \ 'options': '--multi --reverse --margin 15%,0 --preview=''rg --pretty --context 3 -- {q} {1}''',
         \ 'up':    5})
 endfunction
 " }}}
 
-let s:insert_note_key = get(g:, 'nv_insert_note_key', 'ctrl-z')
+let s:insert_note_key = get(g:, 'nv_insert_note_key', '<c-z>')
 augroup nv
   autocmd!
   exe 'autocmd BufRead,BufNewFile ' . s:glob .
