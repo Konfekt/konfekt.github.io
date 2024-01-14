@@ -43,7 +43,7 @@ if no note is found (or a special key combination, say `'ctrl-x`, is hit), then 
 The paths of the Zettelkasten (and additional folders of notes) are listed in `g:nv_search_paths`, that of the Zettelkasten coming first.
 To jump to a note, type `gf` when the cursor is on the file name (made possible by including `g:nv_search_paths` in `&path` and setting `&suffixesadd`).
 
-Finally, a link to a note can be inserted by hitting `ctrl-z` (customizable by `g:insert_note_key`) that searches for the term before the cursor, which can then be refined in a fuzzy searcher.
+Finally, a link to a note can be inserted by hitting `C(trl)-z` (customizable by `g:insert_note_key`) that searches for the term before the cursor, which can then be refined in a fuzzy searcher.
 
 ```vim
 " set up search paths
@@ -91,14 +91,14 @@ endfunction
 let s:search_paths = join(map(copy(g:nv_search_paths), 'shellescape(v:val)'))
 function! s:complete_file()
   return fzf#vim#complete({
-        \ 'source':  'rg --follow --smart-case --no-heading --line-number --color never --no-messages "" ' . s:search_paths,
+        \ 'source':  'rg --follow --smart-case --color=never --no-messages --files-with-matches "" ' . s:search_paths,
         \ 'reducer': function('NV_make_note_link'),
-        \ 'options': '--multi --reverse --margin 15%,0',
+        \ 'options': '--multi --reverse --margin 15%,0 --preview=''rg --pretty --context 3 -- {q} {1}''',
         \ 'up':    5})
 endfunction
 " }}}
 
-let s:insert_note_key = get(g:, 'nv_insert_note_key', 'ctrl-z')
+let s:insert_note_key = get(g:, 'nv_insert_note_key', 'c-z')
 augroup nv
   autocmd!
   exe 'autocmd BufRead,BufNewFile ' . s:glob .
