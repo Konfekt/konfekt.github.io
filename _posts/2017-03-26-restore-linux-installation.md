@@ -6,7 +6,7 @@ categories: fsarchiver grub fstab
 comments: true
 ---
 
-We want to restore a Linux installation, that is, its
+We want to copy a Linux installation, that is, its
 
 - root `/` and
 - home `/home/$USER` directory
@@ -15,7 +15,7 @@ onto another computer.
 
 # Premises
 
-We assume that the installed Linux system (in our case, it happened to be openSUSE 42.2) uses
+We assume that the installed Linux system  uses
 
 - the bootloader `grub2`
 
@@ -24,212 +24,125 @@ and has separate partitions for
 - the root `/` and
 - the home `/home` folders
 
-As a backup tool, we will use `rsync`, because it is
+# 1. Identify Devices
+```bash
+lsblk -f
+```
+- Source root partition: e.g. `/dev/sdaX`
+- Target USB partition: e.g. `/dev/sdb1`
 
-- stable,
-- fast
-- versatile, and
-- free of dependencies, that is, it is a single executable.
-
-# Saving the Installation
-
-First, while not strictly necessary, copying the `rsync` executable, say `/usr/bin/rsync` into the `$BKP_FOLDER` by
-
-```sh
-cp /usr/bin/rsync $BKP_FOLDER
+# 2. Prepare USB
+```bash
+mkfs.ext4 /dev/sdb1
+mount /dev/sdb1 /mnt/usb
 ```
 
-avoids depending on whether `rsync` has been installed on the rescue system or not.
-
-To save the partitions:
-
-<!-- We assume that the backup partition is of type `NTFS`, the file system used by Microsoft Windows (32 bit). -->
-
-1. Use `lsblk` to identify the backup partition: its device letter, say `b`, and its partition number, say `1`; for example `/dev/sdb1`.
-1. Mount the partition `$PARTITION` to a folder `$FOLDER,` say `/mnt`, by `mount $PARTIION $FOLDER`, say `mount /dev/sdb1 /mnt`:
-    <!-- To save our data, we choose `backup` as name of the folder in our backup partition: -->
-
-    ```sh
-    MOUNT=/mnt
-    BKP_LABEL=USB_BKP
-
-    BKP_MOUNT="$MOUNT"/"$BKP_LABEL"
-    mkdir --parents "$BKP_MOUNT"
-    mount /dev/sdb1 "$BKP_MOUNT"
-    ```
-
-1. Copy
-
-    - the home partition, skipping trash and cache files, and
-    - the root partition, skipping the home folder (which is on a separate partition) and folders that only contain
-
-        - boot images and kernel modules,
-        - backups
-        - removable media, and
-        - temporary and cache files:
-
-    ```sh
-    BKP_FOLDER="$BKP_MOUNT"
-
-    HOME_FOLDER="/home/$USER"
-    HOME_BACKUP_FOLDER="$BKP_FOLDER/home"
-    mkdir --parents "$HOME_BACKUP_FOLDER"
-
-    rsync -avxEHA --delete --human-readable --info=progress2 \
-      --exclude="/.local/share/Trash" \
-      --exclude="/.cache" \
-      "$HOME_FOLDER/" "$HOME_BACKUP_FOLDER/"
-
-    ROOT_FOLDER="/"
-    ROOT_BACKUP_FOLDER="$BKP_FOLDER/root"
-    mkdir --parents "$BKP_FOLDER/root"
-
-    rsync -avxEHA --delete --human-readable --info=progress2 \
-      --exclude=/home \
-      --exclude='/etc/fstab' \
-      --exclude='/boot/' \
-      --exclude='/lib/' \
-      --exclude='/lib64/' \
-      --exclude='/.snapshots' \
-      --exclude='/media' \
-      --exclude='/mnt' \
-      --exclude='/run' \
-      --exclude='/dev' \
-      --exclude='/proc' \
-      --exclude='/sys' \
-      --exclude='/tmp' \
-      --exclude='/var/run' \
-      --exclude='/var/lock' \
-      --exclude='/var/tmp' \
-      "$ROOT_FOLDER" "$ROOT_BACKUP_FOLDER/"
-
-    umount --verbose "$BKP_MOUNT"
-    rmdir --verbose "$BKP_MOUNT"
-    ```
-
-<!-- Saving the file-system table is not strictly necessary, but avoids editing manually certain IDs in the file-system table file `/etc/fstab` after restoring the root partition:  -->
-<!-- Copy it into the `$BKP_FOLDER` by  -->
-<!-- ```sh  -->
-<!-- mkdir -p $BKP_FOLDER/etc  -->
-<!-- cp /etc/fstab $BKP_FOLDER/etc/fstab  -->
-<!-- ```  -->
-<!--   -->
-<!-- To explain:  -->
-<!-- The file `/etc/fstab` mounts file systems, partitions, to directories, for example the root partition `/dev/sda1` to `/` and the home partition `/dev/sda2` to `/home`.  -->
-<!-- These file systems are identified by a hexadecimal string, the universal unique identifier (UUID).  -->
-<!--   -->
-<!-- When reinstalling, these UUID are reassigned.  -->
-<!-- The bootloader uses these reassigned UUIDs,  -->
-<!-- We therefore save `/etc/fstab` and restore it afterwards, and thus keep the UUIDs as known to the bootloader.  -->
-# Restoring the installation
-
-To restore the installation,
-
-1. reinstall Linux minimally,
-1. copy the partitions, and
-1. finally restore the bootloader:
-
-## Reinstalling Linux
-
-1. To
-
-    - partition the hard drive, and
-    - install the bootloader (Grub2 in our case),
-
-    install the Linux distribution in its most basic configuration (that is, installing as few packages as possible).
-
-2. Once Linux is installed, boot into a rescue system, such as that on the installation medium (DVD or USB drive) of the Linux distribution.
-1. Log into a terminal.
-1. Use `ls -l /dev/disk/by-uuid` to detect which device letter (say `/dev/sda`) is assigned to which hard disk and which number to which partition.
-1. Note the letter and number of the
-
-    - backup partition, as well as
-    - the root and home partitions.
-
-    (For example, `/dev/sda` might be the hard disk, `\dev\sda2` the root partition and `\dev\sda3` the home partition).
-
-## Restoring the partitions
-
-We assume that
-
-- the backup partition is `/dev/sdb2`, and
-- the root and home partitions are `/dev/sda2` and `/dev/sda3`.
-
-To first mount and then restore the files:
-
-```sh
-mkdir -p /mnt/bkp && mount /dev/sdb2 /mnt/bkp
-
-(
-cd /mnt/bkp/
-
-mkdir -p /mnt/root && mount /dev/sda2 /mnt/root
-rsync \
-  --info=stats1,progress2 --human-readable --compress \
-  --archive --executability --hard-links --modify-window=1 --acls --xattrs \
-  --update --delete \
-  --exclude='/home' \
-  --exclude='/.snapshots' \
-  --exclude='/media' \
-  --exclude='/mnt' \
-  --exclude='/run' \
-  --exclude='/dev' \
-  --exclude='/proc' \
-  --exclude='/sys' \
-  --exclude='/tmp' \
-  --exclude='/var/run' \
-  --exclude='/var/lock' \
-  --exclude='/var/tmp' \
-  ./ /mnt/root/
-
-mkdir -p /mnt/home && mount /dev/sda3 /mnt/home
-rsync \
-  --info=stats1,progress2 --human-readable --compress \
-  --archive --executability --hard-links --modify-window=1 --acls --xattrs \
-  --update --delete \
-  ./home/ /mnt/home/
-)
+If USB also has EFI partition, then
+```bash
+mount /dev/sdb2 /mnt/usb/boot/efi
 ```
 
-## Restoring the bootloader
+If not yet, then create a separate EFI partition if system boots via UEFI:
+```bash
+mkfs.vfat -F32 /dev/sdb2
+mkdir -p /mnt/usb/boot/efi
+mount /dev/sdb2 /mnt/usb/boot/efi
+```
 
-We assume (as above) that the root partition is `/dev/sda1`.
-To restore the bootloader:
+# 3. Backup Configs to Preserve  
 
-```sh
-mkdir -p /mnt/root && mount /dev/sda2 -t btrfs /mnt;
+```bash  
+cp -a /mnt/usb/etc/fstab /mnt/usb/etc/fstab.backup
+cp -a /mnt/usb/etc/passwd /mnt/usb/etc/passwd.backup
+cp -a /mnt/usb/etc/group  /mnt/usb/etc/group.backup
+cp -a /mnt/usb/etc/subgid /mnt/usb/etc/subgid.backup
+cp -a /mnt/usb/etc/subuid /mnt/usb/etc/subuid.backup
+cp -a /mnt/usb/etc/shadow /mnt/usb/etc/shadow.backup
+cp -a /mnt/usb/etc/gshadow /mnt/usb/etc/gshadow.backup
+```
 
-mount /dev/sda2 -o subvol=/@/boot/grub2/x86_64-efi  /mnt/boot/grub2/x86_64-efi;
-mount /dev/sda2 -o subvol=/@/boot/grub2/i386-pc     /mnt/boot/grub2/i386-pc;
-mount /dev/sda2 -o subvol=/@/var                    /mnt/var;
-mount /dev/sda2 -o subvol=/@/usr/local              /mnt/usr/local;
-mount /dev/sda2 -o subvol=/@/tmp                    /mnt/tmp;
-mount /dev/sda2 -o subvol=/@/srv                    /mnt/srv;
-mount /dev/sda2 -o subvol=/@/root                   /mnt/root;
-mount /dev/sda2 -o subvol=/@/opt                    /mnt/opt;
+# 3. Clone Root with `rsync`
+# 3. Rsync Root Excluding Critical Paths  
+```bash  
+rsync -aAXHv --numeric-ids --delete --compress --info=stats1,progress2 --human-readable \
+  --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"} \
+  --exclude={"/home/*","/etc/fstab","/etc/passwd","/etc/group","/etc/shadow"} \
+  / /mnt/usb
+```  
+- `-a` archive (preserve perms, timestamps, symlinks)
+- `-A` preserve ACLs
+- `-X` preserve xattrs
+- `--numeric-ids` preserve UID/GID mapping
+- Exclude `/home` to keep existing partition intact.  
+- Exclude `fstab` and user database to retain USB-specific data.  
 
-mkdir -p /mnt/root/dev && mount --bind /dev      /mnt/root/dev
-chroot /mnt/root
-  mkdir -p /mnt/root/proc && mount -t proc  proc  /proc
-  mkdir -p /mnt/root/sys  && mount -t sysfs sysfs /sys
+# 4. Restore Preserved Files  
+```bash
+cp -a /mnt/usb/etc/fstab.backup /mnt/usb/etc/fstab
+cp -a /mnt/usb/etc/passwd.backup /mnt/usb/etc/passwd
+cp -a /mnt/usb/etc/group.backup  /mnt/usb/etc/group
+cp -a /mnt/usb/etc/shadow.backup /mnt/usb/etc/shadow
+```  
+  
+# 5. Verify `/etc/fstab`  
+Ensure correct filesystem UUIDs for:  
+- root filesystem (USB root partition)  
+- home partition (USB `/home`)  
+- EFI (if UEFI system)  
+  
+Check UUIDs: `blkid`.
 
-  grub2-mkconfig -o /boot/grub2/grub.cfg && grub2-install /dev/sda
+# 6. Bind Mount for `chroot`
+If the source file system is not BTRFS, say Ext4 or XFS, then
+
+```bash
+mount --rbind /dev /mnt/usb/dev
+mount --rbind /proc /mnt/usb/proc
+mount --rbind /sys /mnt/usb/sys
+mount --rbind /run /mnt/usb/run
+chroot /mnt/usb /bin/bash
+```
+
+Otherwise, that is, if the source file system uses BTRFS, then
+
+```bash
+mount /dev/sdb1 -o subvol=/@/boot/grub2/x86_64-efi  /mnt/usb/boot/grub2/x86_64-efi;
+mount /dev/sdb1 -o subvol=/@/boot/grub2/i386-pc     /mnt/usb/boot/grub2/i386-pc;
+mount /dev/sdb1 -o subvol=/@/var                    /mnt/usb/var;
+mount /dev/sdb1 -o subvol=/@/usr/local              /mnt/usb/usr/local;
+mount /dev/sdb1 -o subvol=/@/tmp                    /mnt/usb/tmp;
+mount /dev/sdb1 -o subvol=/@/srv                    /mnt/usb/srv;
+mount /dev/sdb1 -o subvol=/@/root                   /mnt/usb/root;
+mount /dev/sdb1 -o subvol=/@/opt                    /mnt/usb/opt;
+```
+
+# 7. Inside Chroot: Recreate GRUB
+
+## For BIOS:
+```bash
+grub-install /dev/sdb
+update-grub
+```
+On Opensuse: 
+```bash
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+grub2-install /dev/sdb
+```
+
+## For UEFI:
+```bash
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=USB --recheck
+update-grub
+```
+On Opensuse: 
+```bash
+sudo grub2-mkconfig -o /boot/efi/EFI/opensuse/grub.cfg
+grub2-install /dev/sdb
+```
+
+# 8. Exit and Cleanup
+```bash
 exit
+umount -R /mnt/usb
 ```
 
-<!-- ## Restoring /etc/fstab -->
-<!--  -->
-<!-- Either -->
-<!--  -->
-<!-- - you saved `/etc/fstab` before restoring the partitions, then copy it to `/etc/fstab` by -->
-<!--  -->
-<!-- ```sh -->
-<!-- mkdir -p /mnt/bkp; -->
-<!-- mkdir -p /mnt/root -->
-<!-- mount /dev/sdb1 /mnt/bkp; -->
-<!-- mount /dev/sda1 /mnt/root -->
-<!-- cp /mnt/bkp/etc/fstab /mnt/root/etc/fstab -->
-<!-- ``` -->
-<!-- or -->
-<!--  -->
-<!-- - otherwise, use `ls -l /dev/disk/by-uuid` to update the UUID entries in `/etc/fstab` accordingly, say by `vim /etc/fstab`. -->
