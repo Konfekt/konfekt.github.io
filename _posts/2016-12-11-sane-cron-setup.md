@@ -6,6 +6,8 @@ categories: cron anacron linux
 comments: true
 ---
 
+**Update (2026-09-21):** [systemd user timers]({% post_url 2026-09-21-sane-systemd-timer-setup %}) run the same folders.
+
 `cron` is a program that, continuously sitting in the background, runs an executable at a set time of day, as set up in a configuration file `crontab`.
 `anacron` is a program, that, continually called by `cron`, runs an executable at a set day (week, month), as set up in a configuration file `anacrontab`.
 
